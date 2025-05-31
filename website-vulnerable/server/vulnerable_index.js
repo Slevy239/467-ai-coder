@@ -1,4 +1,5 @@
 // vulnerable_index.js
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
@@ -11,7 +12,6 @@ const initDatabase = require('./initDB');
 const API = process.env.REACT_APP_API_URL;
 const PORT = process.env.PORT || 5000;
 
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
