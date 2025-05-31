@@ -8,7 +8,7 @@ const { Pool } = require('pg');
 const serialize = require('serialize-javascript');
 const xml2js = require('xml2js');
 const initDatabase = require('./initDB');
-
+const API = process.env.REACT_APP_API_URL;
 const PORT = process.env.PORT || 5000;
 
 require('dotenv').config();
@@ -23,12 +23,19 @@ const SECRET = 'insecure_secret';
 initDatabase();
 
 // DB connection pool
+// const pool = new Pool({
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   host: process.env.DB_HOST,
+//   port: process.env.DB_PORT,
+//   database: process.env.DB_NAME,
+// });
+
 const pool = new Pool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // For Render & other managed databases
+  },
 });
 
 // 🔓 Insecure login — vulnerable to SQLi
