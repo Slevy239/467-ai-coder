@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../axios';
 import Navbar from './Navbar';
 import './Todo.css';
+const API = process.env.REACT_APP_API_URL;
 
 function TodoPage() {
   const navigate = useNavigate();
