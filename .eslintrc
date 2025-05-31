@@ -1,0 +1,39 @@
+{
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true // Enable JSX parsing
+    },
+    "requireConfigFile": false // Allow ESLint to run without requiring a Babel config file
+  },
+  "plugins": [
+    "react"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended"
+  ],
+  "rules": {
+    "react/jsx-uses-react": "error",
+    "react/jsx-uses-vars": "error",
+    "react/react-in-jsx-scope": "off", // Not needed for React 17+
+    "react-hooks/rules-of-hooks": "error", // Enforce rules of hooks
+    "react-hooks/exhaustive-deps": "warn", // Warn about missing dependencies in hooks
+    "indent": ["error", 2], // Enforce 2-space indentation
+    "no-mixed-spaces-and-tabs": "error", // Disallow mixed spaces and tabs
+    "space-before-blocks": ["error", "always"], // Require space before blocks
+    "keyword-spacing": ["error", { "before": true, "after": true }], // Require space around keywords
+    "space-infix-ops": "error", // Require spaces around infix operators
+    "space-in-parens": ["error", "never"], // Disallow spaces inside parentheses
+    "array-bracket-spacing": ["error", "never"], // Disallow spaces inside array brackets
+    "object-curly-spacing": ["error", "always"], // Require spaces inside curly braces
+    "comma-spacing": ["error", { "before": false, "after": true }] // Require space after commas
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true
+  }
+}
