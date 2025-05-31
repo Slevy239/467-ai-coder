@@ -14,7 +14,7 @@ function Login() {
     setErrorMsg('');
 
     try {
-      const response = await axios.post('https://four67-ai-coder-backend.onrender.com/login', { username, password });
+      const response = await axios.post('/login', { username, password });
 
       // Save basic session info directly
       localStorage.setItem('user_id', response.data.id);
