@@ -34,7 +34,7 @@ initDatabase();
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false, // For Render & other managed databases
+    rejectUnauthorized: false,
   },
 });
 
