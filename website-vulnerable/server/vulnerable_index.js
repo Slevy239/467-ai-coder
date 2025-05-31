@@ -38,6 +38,8 @@ const pool = new Pool({
   },
 });
 
+console.log("port:")
+
 // 🔓 Insecure login — vulnerable to SQLi
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
