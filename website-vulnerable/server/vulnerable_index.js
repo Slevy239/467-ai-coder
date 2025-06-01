@@ -43,12 +43,13 @@ console.log("port:")
 // 🔓 Insecure login — vulnerable to SQLi
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const sql = `SELECT * FROM usersv WHERE username = '${username}' AND password = '${password}'`;
 
-  console.log('[LOGIN] Attempting login for:', username);
+  console.log('[LOGIN] Incoming login request for:', username);
+
+  const sql = `SELECT * FROM usersv WHERE username = $1 AND password = $2`;
 
   try {
-    const result = await pool.query(sql);
+    const result = await pool.query(sql, [username, password]);
     console.log('[LOGIN] Query result:', result.rows);
 
     if (result.rows.length === 1) {
@@ -63,7 +64,7 @@ app.post('/login', async (req, res) => {
       res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
   } catch (err) {
-    console.error('Login error:', err.message);
+    console.error('[LOGIN ERROR]', err); // Log full error
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
