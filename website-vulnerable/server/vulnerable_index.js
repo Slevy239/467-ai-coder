@@ -45,8 +45,11 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   const sql = `SELECT * FROM usersv WHERE username = '${username}' AND password = '${password}'`;
 
+  console.log('[LOGIN] Attempting login for:', username);
+
   try {
     const result = await pool.query(sql);
+    console.log('[LOGIN] Query result:', result.rows);
 
     if (result.rows.length === 1) {
       const user = result.rows[0];
@@ -61,9 +64,10 @@ app.post('/login', async (req, res) => {
     }
   } catch (err) {
     console.error('Login error:', err.message);
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
+
 
 // 🔓 Insecure registration — no sanitization
 app.post('/register', async (req, res) => {
