@@ -14,7 +14,15 @@ const PORT = process.env.PORT || 5000;
 
 
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+  'https://four67-ai-coder.onrender.com', // Your frontend React app URL
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'DELETE', 'PUT'],
+  credentials: true
+}));
 app.use(bodyParser.json());
 
 const SECRET = 'insecure_secret';
