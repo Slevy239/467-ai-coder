@@ -45,7 +45,7 @@ const pool = new Pool({
 console.log("port:")
 
 // 🔓 Insecure login — vulnerable to SQLi
-app.post('https://four67-ai-coder-backend.onrender.com/login', async (req, res) => {
+app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   console.log('[LOGIN] Incoming login request for:', username);
