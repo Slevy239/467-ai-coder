@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 
 // ✅ CORS Configuration
 const corsOptions = {
-  origin: 'https://four67-ai-coder-g1ln.onrender.com', // your frontend domain
+  origin: 'https://four67-ai-coder-backend.onrender.com', // your frontend domain
   credentials: true,
 };
 app.use(cors(corsOptions));
