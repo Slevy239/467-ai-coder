@@ -14,15 +14,11 @@ const PORT = process.env.PORT || 5000;
 
 
 const app = express();
-const allowedOrigins = [
-  'https://four67-ai-coder.onrender.com', // Your frontend React app URL
-];
-
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ['GET', 'POST', 'DELETE', 'PUT'],
-  credentials: true
-}));
+const corsOptions = {
+  origin: 'https://four67-ai-coder-g1ln.onrender.com',
+  credentials: true, // Optional: needed if using cookies or sessions
+};
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 const SECRET = 'insecure_secret';
