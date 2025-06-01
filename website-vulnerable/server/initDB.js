@@ -26,13 +26,16 @@ async function initDatabase() {
 
     await adminClient.end();
 
-    // Connect to the new database and create tables if needed
+    // Connect to the target database with SSL
     const projectClient = new Client({
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       host: process.env.DB_HOST,
       port: process.env.DB_PORT,
-      database: process.env.DB_NAME
+      database: process.env.DB_NAME,
+      ssl: {
+        rejectUnauthorized: false
+      }
     });
 
     await projectClient.connect();
@@ -57,30 +60,28 @@ async function initDatabase() {
       );
     `);
     console.log("Table 'todosv' checked/created.");
-    
-    // Insert test admin and user if they don’t already exist
+
+    // Insert test users if they don’t exist
     const adminExists = await projectClient.query(`SELECT * FROM usersv WHERE username = 'admin'`);
     const userExists = await projectClient.query(`SELECT * FROM usersv WHERE username = 'user1'`);
-    
+
     if (adminExists.rowCount === 0) {
-      const hashedAdmin = 'admin123';
       await projectClient.query(
         'INSERT INTO usersv (username, password, role) VALUES ($1, $2, $3)',
-        ['admin', hashedAdmin, 'admin']
+        ['admin', 'admin123', 'admin']
       );
       console.log('Admin user created');
     }
 
     if (userExists.rowCount === 0) {
-      const hashedUser = 'user123';
       await projectClient.query(
         'INSERT INTO usersv (username, password, role) VALUES ($1, $2, $3)',
-        ['user1', hashedUser, 'user']
+        ['user1', 'user123', 'user']
       );
       console.log('Regular user created');
     }
-    
-    // 🔍 Show all tables in the current database
+
+    // Show all tables
     const tableList = await projectClient.query(`
       SELECT table_name
       FROM information_schema.tables
@@ -89,6 +90,7 @@ async function initDatabase() {
 
     console.log('✅ Tables in the database:');
     tableList.rows.forEach(row => console.log(`- ${row.table_name}`));
+
     await projectClient.end();
 
   } catch (err) {
