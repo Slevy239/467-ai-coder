@@ -1,65 +1,64 @@
-// vulnerable_index.js
+// index.js
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
-const jwt = require('jsonwebtoken');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const { Pool } = require('pg');
 const serialize = require('serialize-javascript');
 const xml2js = require('xml2js');
 const initDatabase = require('./initDB');
-
-const PORT = process.env.PORT || 5000;
-
-require('dotenv').config();
+const nserialize = require('node-serialize');
 
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 5000;
+
+// ✅ CORS Configuration
+const corsOptions = {
+  origin: 'https://four67-ai-coder-backend.onrender.com', // your frontend domain
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-const SECRET = 'insecure_secret';
-
-// Initialize DB (create tables etc.)
+// ✅ Initialize database
 initDatabase();
 
-// DB connection pool
+// ✅ PostgreSQL connection
 const pool = new Pool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
-// 🔓 Insecure login — vulnerable to SQLi
+// ✅ Insecure login (for testing)
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const sql = `SELECT * FROM usersv WHERE username = '${username}' AND password = '${password}'`;
+  const sql = 'SELECT * FROM usersv WHERE username = $1 AND password = $2';
 
   try {
-    const result = await pool.query(sql);
+    const result = await pool.query(sql, [username, password]);
 
     if (result.rows.length === 1) {
       const user = result.rows[0];
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         id: user.id,
         username: user.username,
-        role: user.role
+        role: user.role,
       });
     } else {
-      res.status(401).json({ success: false, error: 'Invalid credentials' });
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
   } catch (err) {
-    console.error('Login error:', err.message);
-    res.status(500).json({ success: false });
+    console.error('[LOGIN ERROR]', err);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-// 🔓 Insecure registration — no sanitization
+// ✅ Insecure registration
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   const sql = `INSERT INTO usersv (username, password, role) VALUES ('${username}', '${password}', 'user') RETURNING id`;
+
   try {
     const result = await pool.query(sql);
     res.status(201).json({ message: 'User registered', userId: result.rows[0].id });
@@ -68,17 +67,17 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// 🔓 Broken Access Control — no user validation
+// ✅ Get todos (broken access control)
 app.get('/todos/:userId', async (req, res) => {
-  const sql = `SELECT * FROM todosv WHERE user_id = ${req.params.userId}`;
   try {
-    const result = await pool.query(sql);
+    const result = await pool.query(`SELECT * FROM todosv WHERE user_id = ${req.params.userId}`);
     res.json(result.rows);
   } catch {
     res.status(500).json({ error: 'Failed to fetch todos' });
   }
 });
 
+// ✅ Create todo
 app.post('/todos', async (req, res) => {
   const { user_id, content } = req.body;
   try {
@@ -93,28 +92,28 @@ app.post('/todos', async (req, res) => {
   }
 });
 
+// ✅ Delete todo by ID
 app.delete('/todos/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM todosv WHERE id = $1', [req.params.id]);
-    res.send('Todo deleted');
+    res.status(200).json({ message: 'Todo deleted' });
   } catch (err) {
     console.error('Failed to delete todo:', err.message);
     res.status(500).json({ error: 'Failed to delete todo' });
   }
 });
 
+// ✅ Delete specific user's todo
 app.delete('/todos/:userId/:todoId', async (req, res) => {
-  const sql = `DELETE FROM todosv WHERE id = ${req.params.todoId}`;
   try {
-    await pool.query(sql);
-    res.sendStatus(204);
+    await pool.query('DELETE FROM todosv WHERE id = $1', [req.params.todoId]);
+    res.status(200).json({ message: 'Todo deleted' }); // instead of 204
   } catch {
     res.status(500).json({ error: 'Failed to delete todo' });
   }
 });
 
-// 🔓 Admin route exposed to everyone
-// 🚨 Any user can fetch ALL users
+// ✅ Get all users (admin route exposed)
 app.get('/users', async (req, res) => {
   try {
     const result = await pool.query('SELECT id, username FROM usersv');
@@ -124,47 +123,37 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// 🚨 Any user can delete ANY other user
+// ✅ Delete user
 app.delete('/delete-user/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM usersv WHERE id = $1', [req.params.id]);
-    res.send('User deleted');
+    res.status(200).json({ message: 'User deleted' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete user' });
   }
 });
 
 // 🔓 Insecure Deserialization
-const nserialize = require('node-serialize'); // 🚨 Insecure
 app.post('/deserialize', (req, res) => {
   try {
     const { data } = req.body;
-
-    // 🚨 INSECURE: Deserializing user-controlled input
     const obj = nserialize.unserialize(data);
-
     if (typeof obj.exploit === 'function') {
-      obj.exploit(); // 💥 Executes the malicious payload
+      obj.exploit(); // Executes attacker code
     }
-
     res.send(`Deserialized object: ${JSON.stringify(obj)}`);
   } catch (err) {
-    console.error('Deserialization error:', err.message);
     res.status(500).send('Deserialization failed.');
   }
 });
 
-// 🔓 Known vulnerable components
+// 🔓 Vulnerable serialize-javascript demo
 app.get('/serialize-demo', (req, res) => {
-  // 🚨 Vulnerable: Serializing a function into client-side script
   const xssFunction = () => {
     alert('🚨 XSS via serialize-javascript function');
   };
-
-  // Serialize function unsafely (isJSON: false allows function serialization)
   const script = `<script>(${serialize(xssFunction, { isJSON: false })})();</script>`;
-
-  const html = `
+  res.send(`
     <html>
       <head><title>serialize-javascript XSS Demo</title></head>
       <body>
@@ -173,21 +162,13 @@ app.get('/serialize-demo', (req, res) => {
         <p>If this were vulnerable, an alert would appear in the browser.</p>
       </body>
     </html>
-  `;
-
-  console.log('[DEBUG] serialize version:', require('serialize-javascript/package.json').version);
-  console.log('[DEBUG] Rendered HTML:\n', html);
-
-  res.send(html);
+  `);
 });
 
-// 🔓 XXE endpoint
+// 🔓 XXE
 app.post('/upload-xml', (req, res) => {
   const xml = req.body.xml;
-  const parser = new xml2js.Parser({
-    explicitArray: false,
-    xmlns: true
-  });
+  const parser = new xml2js.Parser({ explicitArray: false, xmlns: true });
 
   parser.parseString(xml, (err, result) => {
     if (err) return res.status(500).send('XML Parse Error');
@@ -195,7 +176,7 @@ app.post('/upload-xml', (req, res) => {
   });
 });
 
-// 🔓 Simulated SQLi
+// 🔓 Simulated SQL injection
 app.post('/search', async (req, res) => {
   const term = req.body.term;
   const sql = `SELECT * FROM todosv WHERE content ILIKE '%${term}%'`;
@@ -208,5 +189,5 @@ app.post('/search', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚨 Vulnerable server running on http://localhost:${PORT}`);
+  console.log(`🚨 Vulnerable server running on port ${PORT}`);
 });

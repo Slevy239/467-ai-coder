@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Register.css'; // Import the custom CSS file
 import PasswordInput from './PasswordInput'; // Adjust the path if necessary
+const API = process.env.REACT_APP_API_URL;
 
 function Register() {
   const [username, setUsername] = useState('');
@@ -21,7 +22,7 @@ function Register() {
     }
 
     try {
-      await axios.post('http://localhost:5000/register', { username, password });
+      await axios.post(`${API}/register`, { username, password });
       setSuccess('Registration successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../axios';
 import Navbar from './Navbar';
 import './Todo.css';
+const API = process.env.REACT_APP_API_URL;
 
 function TodoPage() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ function TodoPage() {
 
   const refreshTodos = useCallback(() => {
     if (!userId) return;
-    axios.get(`http://localhost:5000/todos/${userId}`)
+    axios.get(`${API}/todos/${userId}`)
       .then(res => setTodos(res.data))
       .catch(err => console.error('Failed to fetch todos:', err));
   }, [userId]);
@@ -31,7 +32,7 @@ function TodoPage() {
 
   const addTodo = async () => {
     if (!newTodo.trim()) return;
-    await axios.post(`http://localhost:5000/todos/${userId}`, {
+    await axios.post(`${API}/todos/${userId}`, {
       content: newTodo
     });
     setNewTodo('');
@@ -39,7 +40,7 @@ function TodoPage() {
   };
 
   const deleteTodo = async (id) => {
-    await axios.delete(`http://localhost:5000/todos/${userId}/${id}`);
+    await axios.delete(`${API}/todos/${userId}/${id}`);
     refreshTodos();
   };
 
@@ -67,7 +68,7 @@ function TodoPage() {
 
   const updateTodo = async () => {
     try {
-      await axios.put(`http://localhost:5000/todos/${userId}/${editing}`, {
+      await axios.put(`${API}/todos/${userId}/${editing}`, {
         content: editContent
       });
       cancelEditing();
@@ -79,7 +80,7 @@ function TodoPage() {
 
   const updateTodoWithXML = async () => {
     try {
-      await axios.post('http://localhost:5000/edit-todo-xml', xmlContent, {
+      await axios.post(`${API}/edit-todo-xml`, xmlContent, {
         headers: { 'Content-Type': 'application/xml' },
       });
       cancelEditing();
